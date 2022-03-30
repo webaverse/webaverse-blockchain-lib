@@ -1,0 +1,12 @@
+{
+  "name": "webaverse-blockchain-example",
+  "source": "src/index.html",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "devDependencies": {
+    "parcel": "latest"
+  },
+  "browserslist": "> 0.5%, last 2 versions, not dead"
+}

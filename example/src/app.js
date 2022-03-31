@@ -7,7 +7,8 @@ async function login(type) {
     if (type === 'metamask') {
         const metamask = new MetamaskManager();
         try {
-            await metamask.connect();
+            const signedMessage = await metamask.connect();
+            await metamask.login(signedMessage);
             console.log(await metamask.nft.getNFTs());
         } catch (error) {
             alert(error.message);

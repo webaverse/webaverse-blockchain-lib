@@ -6,9 +6,10 @@ import { config } from "../config/config";
 declare const window: Window;
 
 export class MetamaskManager {
+  provider: ethers.providers.Web3Provider;
   nft: NFTManager;
 
-  public async connect() {
+  public async connect(): Promise<string> {
     const providerMetamask: any = await detectEthereumProvider();
 
     if (providerMetamask) {
@@ -63,30 +64,54 @@ export class MetamaskManager {
       } catch (error) {
         throw new Error("User cancelled the connection request.");
       }
-      const provider = new ethers.providers.Web3Provider(
+      this.provider = new ethers.providers.Web3Provider(
         providerMetamask as any
       );
 
-      const address = await provider.getSigner().getAddress();
-      const signedMessage = await provider.getSigner().signMessage(
-`Welcome to Webaverse!
-Click to sign in and accept the Webaverse Terms of Service.
-This request will not trigger a blockchain transaction or cost any gas fees.
-Wallet address:
-${address}
-Timestamp:
-${new Date().toISOString()}`
-      );
-      console.log({
-        signedMessage,
-      });
+      const address = await this.provider.getSigner().getAddress();
 
-      this.nft = new NFTManager(
-        provider,
-        Number.parseInt(providerMetamask.chainId, 16)
+      let fetchRes: any = await fetch(
+        `${config.authServerURL}/metamask-login?address=${address}`
       );
+
+      let fetchResJson: any = await fetchRes.json();
+
+      if (fetchRes.status >= 400) {
+        throw new Error(fetchResJson.message);
+      }
+      const messageToSign = fetchResJson.message;
+
+      const signedMessage = await this.provider
+        .getSigner()
+        .signMessage(messageToSign);
+      return signedMessage;
     } else {
       throw new Error("Metamask not installed");
     }
+  }
+
+  async login(signedMessage) {
+    const address = await this.provider.getSigner().getAddress();
+    const fetchRes = await fetch(`${config.authServerURL}/metamask-login`, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        address,
+        signedMessage,
+      }),
+    });
+
+    const fetchResJson = await fetchRes.json();
+
+    if (fetchRes.status >= 400) {
+      throw new Error(fetchResJson.message);
+    }
+    const jwtToken = fetchResJson.jwtToken;
+    const network = await this.provider.getNetwork();
+    this.nft = new NFTManager(this.provider, network.chainId);
+    return jwtToken;
   }
 }

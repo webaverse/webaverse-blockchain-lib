@@ -2,12 +2,22 @@ import { ethers } from "ethers";
 import detectEthereumProvider from "@metamask/detect-provider";
 import { NFTManager } from "../nft/nft";
 import { config } from "../config/config";
+import { ProfileManager } from "../profile/profile";
 
 declare const window: Window;
 
 export class MetamaskManager {
   provider: ethers.providers.Web3Provider;
   nft: NFTManager;
+  walletAddress: string;
+
+  public getAddr() {
+    return this.provider.getSigner().getAddress();
+  }
+
+  public getProvider() {
+    return this.provider;
+  }
 
   public async connect(): Promise<string> {
     const providerMetamask: any = await detectEthereumProvider();
@@ -69,6 +79,7 @@ export class MetamaskManager {
       );
 
       const address = await this.provider.getSigner().getAddress();
+      this.walletAddress = address;
 
       let fetchRes: any = await fetch(
         `${config.authServerURL}/metamask-login?address=${address}`

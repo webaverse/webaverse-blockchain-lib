@@ -27,9 +27,9 @@ export class MetamaskManager {
       }
       if (
         Number.parseInt(providerMetamask.chainId, 16) !==
-          137 /* Polygon's Chain ID */ &&
+        137 /* Polygon's Chain ID */ &&
         Number.parseInt(providerMetamask.chainId, 16) !==
-          1 /* Ethereum's Chain ID */
+        1 /* Ethereum's Chain ID */
       ) {
         try {
           await providerMetamask.request({

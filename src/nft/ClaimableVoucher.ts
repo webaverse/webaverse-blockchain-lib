@@ -69,6 +69,5 @@ export class ClaimableVoucher {
   }
 }
 
-module.exports = {
-  ClaimableVoucher,
-};
+export default ClaimableVoucher;
+

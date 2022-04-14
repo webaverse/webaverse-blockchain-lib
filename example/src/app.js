@@ -1,81 +1,92 @@
-import { MetamaskManager } from '../../dist';
+import { MetamaskManager } from './lib-dist/index';
 
-let wallet = undefined; // iframe element
+// called from onclick
+function editProfile() {
+    const key = document.getElementById('key').value
+    const value = document.getElementById('value').value
 
+    if (!key || !value) {
+        alert('Invalid input');
+    } else {
+        metamask.setProfile(key, value);
+        alert('Transaction created');
+        $('#editprofile').modal('hide');
+    }
+}
+
+function init() {
+    document.getElementById('loginMetamask').addEventListener('click', () => {
+        login('metamask').then(() => {
+            document.getElementById('editprofilebtn').addEventListener('click', () => {
+                editProfile();
+            }, false);
+        });
+    });
+    document.getElementById('loginDiscord').addEventListener('click', () => {
+        login('discord').then(() => {
+            document.getElementById('editprofilebtn').addEventListener('click', () => {
+                editProfile();
+            });
+        });
+    });
+
+    login('metamask').then(() => {
+        document.getElementById('editprofilebtn').addEventListener('click', () => {
+            editProfile();
+        });
+    });
+}
+document.addEventListener('DOMContentLoaded', init, false);
+
+
+
+// metamask is an object of our library's Metamask Manager
+let metamask = undefined;
+
+// login function connects user's metamask and if its working then adds weba-wallet iframe and initialize it
+// Once weba-wallet is initialized it subscribes to profile and nft subjects (RxJs). Read more: https://rxjs.dev/guide/overview
 async function login(type) {
     if (type === 'metamask') {
-        const metamask = new MetamaskManager();
+        metamask = new MetamaskManager();
         try {
-            const signedMessage = await metamask.connect();
-            const jwt = await metamask.login(signedMessage);
-            sendMessage('initiate_wallet', { jwt })
+            await metamask.connect();
+            document.getElementById('loginBtns').style.display = "none";
+            document.getElementById('address').innerHTML = metamask.address;
+            metamask.getProfile().subscribe(profile => {
+                console.log(profile);
+                const keyValArr = Object.entries(profile);
+                let profileList = [];
+                for (const kv of keyValArr) {
+                    profileList.push(`<li class="list-group-item text-uppercase p-2">${kv[0]}: ${kv[1]}</li>`);
+                }
+                document.getElementById('profile').innerHTML = profileList.join('');
+            });
+            metamask.getNFTs().subscribe(nfts => {
+                const nftCards = [];
+                console.log(nfts);
+                for (const nft of nfts) {
+                    const nftC = `
+                    <div class="col-md-4">
+                        <div class="card text-white bg-dark">
+                            <img
+                                class="card-img-top card-img"
+                                src="${nft.metadata?.image ?? nft.asset_contract.image_url}"
+                                alt=""
+                            />
+                            <div class="card-body">
+                                <h4 class="card-title">${nft.metadata.name ?? ''}</h4>
+                                <p class="card-text">${nft.metadata?.description ?? ''}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                    nftCards.push(nftC);
+                }
+                document.getElementById('nfts').innerHTML = nftCards.join('');
+            });
         } catch (error) {
             alert(error.message);
         }
     } else {
         window.alert('Not implemented');
     }
-}
-
-async function getProfile() {
-    console.log('get profile')
-    sendMessage('get_profile', {});
-}
-
-async function setProfile(key, value) {
-    console.log('set profile')
-    sendMessage('set_profile', { key, value });
-}
-
-function sendMessage(method, data = {}) {
-    const message = {
-        method,
-        data
-    }
-    wallet.contentWindow.postMessage(JSON.stringify(message), "*");
-}
-
-function receiveMessage(event) {
-    console.log('receiveMessage')
-    if (event.origin + '/' !== wallet.src) { // Adding '/' at the end to compare origin and src
-        return;
-    }
-    if (!event.data) {
-        return;
-    }
-    const res = JSON.parse(event.data);
-    const { type, method, data, error } = res;
-    if (error) {
-        window.alert(error);
-        return;
-    }
-    if (type === 'event') {
-        console.log(`Got event: ${method}`, { data })
-    } else if (type === 'response') {
-        console.log(`Got response for: ${method}`, { data })
-    }
-}
-
-window.onload = () => {
-    wallet = document.getElementById('wallet');
-    window.addEventListener("message", receiveMessage, false);
-    document.getElementById('loginMetamask').addEventListener('click', () => {
-        login('metamask');
-    });
-    document.getElementById('loginDiscord').addEventListener('click', () => {
-        login('discord');
-    });
-    document.getElementById('btn-profile').addEventListener('click', () => {
-        getProfile();
-    });
-
-    document.getElementById('setName').addEventListener('click', () => {
-        const name = document.getElementById('nameInput').value;
-        if (!name.trim()) {
-            alert('Invalid value for name');
-        } else {
-            setProfile('name', name);
-        }
-    });
-
 }

@@ -1,11 +1,8 @@
 // Not used
-
 // import { Contract, Signer } from "ethers";
-
 // // These constants must match the ones used in the smart contract.
 // const SIGNING_DOMAIN_NAME = "Webaverse-voucher";
 // const SIGNING_DOMAIN_VERSION = "1";
-
 // /**
 //  * JSDoc typedefs.
 //  *
@@ -19,7 +16,6 @@
 //   contract: Contract;
 //   signer: Signer;
 //   chainId: Number;
-
 //   /**
 //    * Create a new LazyMinter targeting a deployed instance of the LazyNFT contract.
 //    *
@@ -32,7 +28,6 @@
 //     this.signer = signer;
 //     this.chainId = chainId;
 //   }
-
 //   /**
 //    * Creates a new NFTVoucher object and signs it using signing key provided.
 //    *
@@ -58,7 +53,6 @@
 //       verifyingContract: this.contract.address,
 //       chainId,
 //     };
-
 //     const signature = await (this.signer as any)._signTypedData(
 //       domain,
 //       types,
@@ -70,7 +64,7 @@
 //     };
 //   }
 // }
-
 // module.exports = {
 //   ClaimableVoucher,
 // };
+//# sourceMappingURL=ClaimableVoucher.js.map

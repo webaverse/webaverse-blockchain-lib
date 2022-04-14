@@ -1,29 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <title>Webaverse Dashboard</title>
+    <!-- Required meta tags -->
     <meta charset="utf-8" />
-    <title>Webaverse Blockchain</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <style>
+      .card-img {
+        height: 250px;
+        object-fit: cover;
+        object-position: center;
+      }
+    </style>
   </head>
   <body>
-    <button id="loginMetamask">Login with metamask</button>
-    <button id="loginDiscord">Login with discord</button>
-    <button id="btn-profile">Fetch Profile</button>
-    <iframe
-      src="https://auth.webaverse.com/weba-wallet/"
-      width="0"
-      height="0"
-      frameborder="0"
-      id="wallet"
-    ></iframe>
+    <nav
+      class="navbar navbar-expand-lg navbar-dark"
+      style="background-color: #363636"
+    >
+      <a class="navbar-brand" href="/">Webaverse Login: </a>
+      <button
+        class="navbar-toggler d-lg-none"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarmain"
+        aria-controls="navbarmain"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      ></button>
+      <div class="collapse navbar-collapse" id="navbarmain">
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0" id="loginBtns">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="loginMetamask">Metamask</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="loginDiscord">Discord</a>
+          </li>
+        </ul>
 
-    <br /><br />
-    <br />
-    <div>
-      <input type="text" id="nameInput" placeholder="name" />
-      <button id="setName">Set Name</button>
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="address"></a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="row">
+      <div class="col-md-3">
+        <div class="card">
+          <img class="card-img-top" src="./img/avatar.png" alt="" />
+          <div class="card-body p-2">
+            <h4 class="card-title">Profile</h4>
+            <p class="card-text">Your profile details</p>
+
+            <button
+              type="button"
+              class="btn btn-primary btn-lg"
+              data-toggle="modal"
+              data-target="#editprofile"
+            >
+              Edit profile
+            </button>
+
+            <ul class="list-group" id="profile">
+              <!-- 
+
+                  This is where profile key values are listed using javascript.
+               
+                -->
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-9">
+        <h1>My NFTs</h1>
+        <div class="container">
+          <div class="row" id="nfts">
+            <!-- 
+
+              This is where NFTs are listed using javascript.
+
+             -->
+          </div>
+        </div>
+      </div>
     </div>
 
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="editprofile"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="modelTitleId"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Profile</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="editprofileform">
+              <div class="form-group">
+                <label for="key">Key</label>
+                <select class="form-control" name="key" id="key">
+                  <option value="name">Name</option>
+                  <option value="avatarname">Avatar Name</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="value">Value</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="value"
+                  id="value"
+                  placeholder="Value"
+                />
+              </div>
+
+              <button type="button" id="editprofilebtn" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- JUST FOR BOOTSTRAP -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- MAIN JS FILE -->
     <script type="module" src="app.js"></script>
   </body>
 </html>

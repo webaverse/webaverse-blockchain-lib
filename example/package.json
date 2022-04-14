@@ -8,5 +8,8 @@
   "devDependencies": {
     "parcel": "latest"
   },
-  "browserslist": "> 0.5%, last 2 versions, not dead"
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "dependencies": {
+    "rxjs": "^7.5.5"
+  }
 }

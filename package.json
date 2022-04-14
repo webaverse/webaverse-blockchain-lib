@@ -25,6 +25,7 @@
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",
     "@types/node": "^17.0.23",
-    "ethers": "5.0.18"
+    "ethers": "5.0.18",
+    "rxjs": "^7.5.5"
   }
 }

@@ -26,6 +26,7 @@
     "@metamask/detect-provider": "^1.2.0",
     "@types/node": "^17.0.23",
     "ethers": "5.0.18",
+    "events": "^3.3.0",
     "rxjs": "^7.5.5"
   }
 }

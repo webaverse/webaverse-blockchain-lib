@@ -13,7 +13,10 @@
       "es2015",
       "dom"
     ],
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "events": ["./node_modules/events/*"]
+    }
   },
   "include": [
     "src"

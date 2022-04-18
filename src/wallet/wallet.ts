@@ -2,11 +2,18 @@ import { Contract, ethers, Signer } from "ethers";
 import detectEthereumProvider from "@metamask/detect-provider";
 import { config } from "../config/config";
 import { Subject } from "rxjs";
+import { EventEmitter } from "events";
 
 declare const window: Window;
 
-export class MetamaskManager {
-  private isMetamaskActive = false;
+export class WalletManager extends EventEmitter {
+  events = {
+    webaWalletLoaded: "webawallet_loaded",
+    webaWalletConnected: "webawallet_connected",
+    profile: "profile",
+    nft: "nft",
+    notification: "notification",
+  };
 
   private provider: ethers.providers.Web3Provider;
   private signer: Signer;
@@ -14,6 +21,8 @@ export class MetamaskManager {
   private erc1155Contract: Contract;
   private erc20Contract: Contract;
   private webaverseContract: Contract;
+
+  private iframe: HTMLIFrameElement;
 
   supportedChains = {
     137: "polygon",
@@ -23,23 +32,34 @@ export class MetamaskManager {
 
   public chainId: number;
   public address: string;
-
-  private webaWalletConnected$: Subject<boolean> = new Subject<boolean>();
-  private nft$: Subject<any> = new Subject<any>();
-  private profile$: Subject<any> = new Subject<any>();
+  public webaWalletConnected: boolean = false;
+  public nft = [];
+  public profile = {};
 
   constructor() {
-    this.webaWalletConnected$.next(false);
-    this.nft$.next([]);
-    this.profile$.next(null);
-    document.body.innerHTML += `<iframe src="${config.webaWalletURL}" width="0" height="0" frameborder="0" id="webaWalletIframe"></iframe>`;
+    super();
+    this.iframe = document.createElement("iframe");
+    this.iframe.src = config.webaWalletURL;
+    this.iframe.width = "0px";
+    this.iframe.height = "0px";
+
+    document.body.appendChild(this.iframe);
+    console.log('Appended iframe');
+    this.emit(this.events.webaWalletConnected, {
+      error: false,
+      data: this.webaWalletConnected,
+    });
+    this.emit(this.events.profile, {
+      error: false,
+      data: this.profile,
+    });
+    this.emit(this.events.nft, {
+      error: false,
+      data: this.nft,
+    });
   }
 
-  public async connect(): Promise<void> {
-    window.addEventListener("message", (ev) => {
-      this.receiveMessage(ev);
-    });
-
+  public async connectMetamask(): Promise<void> {
     const providerMetamask: any = await detectEthereumProvider();
     if (providerMetamask) {
       // This is an experimental function and might change in future therefore checking if it exists first.
@@ -100,15 +120,18 @@ export class MetamaskManager {
 
       this.address = await this.provider.getSigner().getAddress();
       this.chainId = Number.parseInt(providerMetamask.chainId, 16);
-      this.isMetamaskActive = true;
+
+      window.addEventListener("message", (ev) => {
+        this.receiveMessage(ev);
+      });
       this.sendMessage("check_auth", {});
     } else {
       throw new Error("Metamask not installed");
     }
   }
 
-  get webaWalletConnected() {
-    return this.webaWalletConnected$;
+  checkAuthenticated() {
+    this.sendMessage("check_auth", {});
   }
 
   async authenticate() {
@@ -127,27 +150,24 @@ export class MetamaskManager {
       signedMessage,
       address: this.address,
     });
-    this.sendMessage("check_auth", {});
   }
 
-  getProfile(): Subject<any> {
+  getProfile() {
     this.sendMessage("get_profile", {});
-    return this.profile$;
+    return this.profile;
   }
 
-  getNFTs(): Subject<any> {
+  async getNFTs() {
     let chain = this.supportedChains[`${this.chainId}`];
     if (!chain) {
       throw new Error(
         "Connected chain not supported. Please connect through ethereum, polygon or webaverse sidechain"
       );
     }
-    fetch(
+    this.nft = await fetch(
       `https://nft.webaverse.com/nft?chainName=${chain}&owner=${this.address}`
-    )
-      .then((res) => res.json())
-      .then((nfts) => this.nft$.next(nfts));
-    return this.nft$;
+    ).then((res) => res.json());
+    this.emit(this.events.nft, { error: false, data: this.nft });
   }
 
   setProfile(key, value) {
@@ -158,28 +178,30 @@ export class MetamaskManager {
   }
 
   private sendMessage(method, data = {}) {
-    const el = document.getElementById("webaWalletIframe") as HTMLIFrameElement;
     const message = {
       method,
       data,
     };
-    if (!el.contentWindow) {
+    console.log("Sending message", message);
+    if (!this.iframe.contentWindow) {
       throw new Error("iframe not loaded");
     }
-    el.contentWindow.postMessage(JSON.stringify(message), "*");
+    this.iframe.contentWindow.postMessage(JSON.stringify(message), "*");
   }
 
   private receiveMessage(event: MessageEvent) {
+    console.log("Received message", event);
     if (event.origin !== config.authServerURL) {
       return;
     }
+    console.log(event);
     const res = JSON.parse(event.data);
     if (res.type === "event") {
       if (res.method === "wallet_launched") {
-        console.log("Webawallet connected.");
-        if (this.isMetamaskActive) {
-          this.sendMessage("check_auth", {});
-        }
+        console.log('Webawallet launched');
+        this.emit(this.events.webaWalletLoaded, {
+          error: null,
+        });
       }
     }
 
@@ -188,28 +210,61 @@ export class MetamaskManager {
         if (!res.data.auth) {
           this.authenticate();
         } else {
-          console.log("Webawallet initialized and ready to use now.");
-          this.webaWalletConnected$.next(true);
+          this.emit(this.events.notification, {
+            error: null,
+            success: "Webawallet initialized and ready to use now.",
+          });
+          this.webaWalletConnected = true;
+          this.emit(this.events.webaWalletConnected, {
+            error: false,
+            data: this.webaWalletConnected,
+          });
           this.getProfile();
           this.getNFTs();
         }
       } else if (res.method === "initiate_wallet_metamask") {
-        console.log("Webawallet initialized and ready to use now.");
-        this.webaWalletConnected$.next(true);
+        this.emit(this.events.notification, {
+          error: null,
+          success: "Webawallet initialized and ready to use now.",
+        });
+        this.emit(this.events.webaWalletConnected, {
+          error: false,
+          data: this.webaWalletConnected,
+        });
         this.getProfile();
         this.getNFTs();
       } else if (res.method === "get_profile") {
         console.log("Got profile");
         if (!res.error) {
-          this.profile$.next(res.data);
+          this.profile = res.data;
+          this.emit(this.events.profile, {
+            error: false,
+            data: this.profile,
+          });
         } else {
-          console.error(res.error);
+          this.emit(this.events.profile, {
+            error: res.error,
+            data: [],
+          });
         }
       } else if (res.method === "set_profile") {
         if (!res.error) {
-          this.sendMessage("get_profile", {});
+          this.emit(this.events.notification, {
+            error: null,
+            success: "Edit profile transaction created",
+          });
+
+          // Setting a 2 second timeout to make sure our sync server is updated
+          // Given the transactions are slow this is negligible
+          setTimeout(() => {
+            this.sendMessage("get_profile", {});
+          }, 2000);
         } else {
           console.error(res.error);
+          this.emit(this.events.notification, {
+            error: res.error,
+            success: null,
+          });
         }
       }
     }

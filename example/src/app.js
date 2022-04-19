@@ -1,5 +1,7 @@
 import { WalletManager } from '../../dist/index';
 
+import { CLIENT_ID, CLIENT_SECRET, PORT } from './config';
+
 // called from onclick
 function editProfile() {
     const key = document.getElementById('key').value
@@ -69,8 +71,6 @@ function init() {
 }
 document.addEventListener('DOMContentLoaded', init, false);
 
-
-
 // metamask is an object of our library's Metamask Manager
 let metamask = undefined;
 
@@ -98,6 +98,42 @@ async function login(type) {
         }
 
     } else {
-        window.alert('Not implemented');
+        location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=http%3A%2F%2Flocalhost%3A${PORT}&response_type=code&scope=identify`;
+    }
+}
+
+window.onload = async function() {
+    if (location.href.indexOf("code") !== -1) {
+        const code = location.href.substring(location.href.indexOf("code") + 5, location.href.length);
+        let oauthData = {};
+        try {
+            const oauthResult = await fetch('https://discord.com/api/oauth2/token', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                    code,
+                    grant_type: 'authorization_code',
+                    redirect_uri: `http://localhost:${PORT}`,
+                    scope: 'identify',
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
+            oauthData = await oauthResult.json();
+            console.log(oauthData);
+        } catch (error) {
+            // NOTE: An unauthorized token will not throw an error;
+            // it will return a 401 Unauthorized response in the try block above
+            console.error(error);
+        }
+
+        const userResult = await fetch('https://discord.com/api/users/@me', {
+            headers: {
+                authorization: `${oauthData.token_type} ${oauthData.access_token}`,
+            },
+        });
+        console.log(await userResult.json());
     }
 }

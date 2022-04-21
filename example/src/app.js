@@ -1,12 +1,17 @@
-import { MetamaskManager } from '../../dist';
+import { MetamaskManager, ProfileManager } from '../../dist';
 
 let wallet = undefined; // iframe element
+let provider;
 
 async function login(type) {
     if (type === 'metamask') {
         const metamask = new MetamaskManager();
         try {
             const signedMessage = await metamask.connect();
+            provider = metamask.getProvider();
+            console.log('login')
+            const t = await provider.getSigner().getAddress();
+            console.log(t);
             const jwt = await metamask.login(signedMessage);
             sendMessage('initiate_wallet', { jwt })
         } catch (error) {
@@ -19,11 +24,15 @@ async function login(type) {
 
 async function getProfile() {
     console.log('get profile')
+    const profile = new ProfileManager(provider);
+    console.log(await profile.getProfile());
     sendMessage('get_profile', {});
 }
 
 async function setProfile(key, value) {
     console.log('set profile')
+    const profile = new ProfileManager(provider);
+    profile.updateProfile(key, value);
     sendMessage('set_profile', { key, value });
 }
 

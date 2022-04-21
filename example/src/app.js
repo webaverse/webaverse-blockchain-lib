@@ -66,6 +66,12 @@ function init() {
             });
         });
     });
+
+    document.getElementById('logout').addEventListener('click', () => {
+        metamask.logout();
+
+        window.location.reload();
+    });
 }
 document.addEventListener('DOMContentLoaded', init, false);
 
@@ -82,6 +88,7 @@ async function login(type) {
             await metamask.connectMetamask();
             document.getElementById('loginBtns').style.display = "none";
             document.getElementById('address').innerHTML = metamask.address;
+            document.getElementById('logout').innerHTML = 'Logout';
 
             metamask.addListener('nft', (ev) => {
                 console.log('nfts fetched', ev);

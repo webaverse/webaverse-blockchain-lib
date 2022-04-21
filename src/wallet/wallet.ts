@@ -44,7 +44,6 @@ export class WalletManager extends EventEmitter {
     this.iframe.height = "0px";
 
     document.body.appendChild(this.iframe);
-    console.log('Appended iframe');
     this.emit(this.events.webaWalletConnected, {
       error: false,
       data: this.webaWalletConnected,
@@ -56,6 +55,13 @@ export class WalletManager extends EventEmitter {
     this.emit(this.events.nft, {
       error: false,
       data: this.nft,
+    });
+  }
+
+  public async connectDiscord(discordid, discordcode): Promise<void> {
+    this.sendMessage("initiate_wallet_discord", {
+      discordcode,
+      discordid,
     });
   }
 
@@ -177,6 +183,11 @@ export class WalletManager extends EventEmitter {
     });
   }
 
+  logout() {
+    this.sendMessage("logout", {
+    });
+  }
+
   private sendMessage(method, data = {}) {
     const message = {
       method,
@@ -198,7 +209,6 @@ export class WalletManager extends EventEmitter {
     const res = JSON.parse(event.data);
     if (res.type === "event") {
       if (res.method === "wallet_launched") {
-        console.log('Webawallet launched');
         this.emit(this.events.webaWalletLoaded, {
           error: null,
         });

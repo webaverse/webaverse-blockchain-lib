@@ -42,6 +42,7 @@ export class WalletManager extends EventEmitter {
     this.iframe.src = config.webaWalletURL;
     this.iframe.width = "0px";
     this.iframe.height = "0px";
+    this.iframe.id = "id_iframe";
 
     document.body.appendChild(this.iframe);
     console.log('Appended iframe');

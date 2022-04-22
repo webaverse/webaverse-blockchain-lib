@@ -1,5 +1,4 @@
 import { WalletManager } from '../../dist/index';
-
 import { CLIENT_ID, CLIENT_SECRET, PORT } from './config';
 
 // called from onclick
@@ -98,7 +97,9 @@ async function login(type) {
         }
 
     } else {
-        location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=http%3A%2F%2Flocalhost%3A${PORT}&response_type=code&scope=identify`;
+        {/* console.log(process.env); */}
+        {/* location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=http%3A%2F%2Flocalhost%3A${PORT}&response_type=code&scope=identify`; */}
+        location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=http%3A%2F%2Flocalhost%3A${PORT}&response_type=code&scope=identify%20email%20guilds`;
     }
 }
 
@@ -134,6 +135,32 @@ window.onload = async function() {
                 authorization: `${oauthData.token_type} ${oauthData.access_token}`,
             },
         });
-        console.log(await userResult.json());
+        const userData = await userResult.json();
+        console.log(userData);
+        const avatar_url = `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}`;
+        document.getElementById('id_avatar').src = avatar_url;
+        userData.avatar = avatar_url;
+
+        const keyValArr = Object.entries(userData);
+        let profileList = [];
+        for (const kv of keyValArr) {
+            profileList.push(`<li class="list-group-item text-uppercase p-2">${kv[0]}: ${kv[1]}</li>`);
+        }
+        document.getElementById('profile').innerHTML = profileList.join('');
+        document.getElementById('b_editprofile').style.display = "none";
+
+        const message = {
+            method: "initiate_wallet_discord",
+            data: {
+                discordid: userData.id,
+                discordcode : code
+            }
+        };
+        console.log(JSON.stringify(message));
+        req = JSON.parse(JSON.stringify(message));
+        const { data, method } = req;
+        console.log(data.discordid);
+        console.log(data.discordcode);
+        document.getElementById("id_iframe").contentWindow.postMessage(JSON.stringify(message), "*");
     }
 }
